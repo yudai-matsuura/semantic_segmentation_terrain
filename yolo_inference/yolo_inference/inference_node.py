@@ -4,19 +4,24 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 from ultralytics import YOLO
+from std_msgs.msg import Float32MultiArray
 
 
 class RealSenseYOLO (Node):
     def __init__(self):
         super().__init__('realsense_yolo_node')
         self.bridge = CvBridge()
-        self.subscription = self.create_subscription(
+        self.realsense_image_subscription_ = self.create_subscription(
             Image,
             'camera/camera/color/image_raw',
             self.image_callback,
             10
         )
-
+        self.bbox_publisher_ = self.create_publisher(
+            Float32MultiArray,
+            'yolo_bboxes',
+            10
+        )
         self.model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train3/weights/best.pt")
         self.get_logger().info("YOLO model loaded successfully")
         self.output_path = "/home/go2laptop/yudai_ws/output_video.mp4"
@@ -34,7 +39,17 @@ class RealSenseYOLO (Node):
                 self.get_logger().info(f"Video writer initialized: {self.output_path}")
 
             results = self.model(cv_image, conf=0.05, iou=0.3)
+            bbox_msgs = Float32MultiArray()
+            bbox_data = []
             annotated = results[0].plot()
+
+            for box in results[0].boxes:
+                xyxy = box.xyxy[0].cpu().numpy()
+                xyxy = [float(x) for x in xyxy]
+                bbox_data.extend(xyxy)
+
+            bbox_msgs.data = bbox_data
+            self.bbox_publisher_.publish(bbox_msgs)
 
             self.out_writer.write(annotated)
             cv2.imshow("YOLOv8 Inference", annotated)
