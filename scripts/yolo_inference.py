@@ -1,11 +1,11 @@
 import cv2
 from ultralytics import YOLO
 
-model = YOLO("best.pt")
+model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train3/weights/best.pt")
 
-video_path = "input_video.mp4"
+video_path = "/home/go2laptop/yudai_ws/input_video.mp4"
 
-output_path = "output_video.mp4"
+output_path = "/home/go2laptop/yudai_ws/output_video.mp4"
 cap  = cv2.VideoCapture(video_path)
 
 fps = int(cap.get(cv2.CAP_PROP_FPS))
@@ -20,7 +20,7 @@ while cap.isOpened():
     if not ret:
         break
 
-    results = model(frame ,conf = 0.7, iou = 0.3)
+    results = model(frame ,conf = 0.05, iou = 0.3)
 
     annotated_frame = results[0].plot()
 
