@@ -13,13 +13,13 @@ class RealSenseYOLO (Node):
         self.bridge = CvBridge()
         self.realsense_image_subscription_ = self.create_subscription(
             Image,
-            'camera/camera/color/image_raw',
+            '/camera/camera/color/image_raw',
             self.image_callback,
             10
         )
         self.bbox_publisher_ = self.create_publisher(
             Float32MultiArray,
-            'yolo_bboxes',
+            '/yolo_bboxes',
             10
         )
         self.model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train3/weights/best.pt")
