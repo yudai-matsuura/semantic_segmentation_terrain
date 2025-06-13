@@ -22,7 +22,7 @@ class RealSenseYOLO (Node):
             '/yolo_bboxes',
             10
         )
-        self.model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train3/weights/best.pt")
+        self.model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train4/weights/best.pt")
         self.get_logger().info("YOLO model loaded successfully")
         self.output_path = "/home/go2laptop/yudai_ws/output_video.mp4"
         self.fps = 30

@@ -1,9 +1,9 @@
 import cv2
 from ultralytics import YOLO
 
-model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train3/weights/best.pt")
+model = YOLO("/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/scripts/runs/detect/train4/weights/best.pt")
 
-video_path = "/home/go2laptop/yudai_ws/input_video.mp4"
+video_path = "/home/go2laptop/yudai_ws/input_video2.mp4"
 
 output_path = "/home/go2laptop/yudai_ws/output_video.mp4"
 cap  = cv2.VideoCapture(video_path)
