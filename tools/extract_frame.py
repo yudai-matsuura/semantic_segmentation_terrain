@@ -2,8 +2,9 @@ import cv2
 import os
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-input_video_path = "/Users/yudaimatsuura/terrain_video_for_dataset.mp4"
-output_image_dir = os.path.abspath(os.path.join(script_dir, '..', 'data', 'train_images'))
+input_video_path = "/Users/yudaimatsuura/SRL_Research/for_annotation_video/for_annotation_4.mp4"
+# output_image_dir = os.path.abspath(os.path.join(script_dir, '..', 'data', 'train_images'))
+output_image_dir = "/Users/yudaimatsuura/SRL_Research/train_data_img"
 
 os.makedirs(output_image_dir, exist_ok=True)
 
