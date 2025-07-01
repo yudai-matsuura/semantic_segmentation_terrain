@@ -1,90 +1,58 @@
-import os
+import torch
 import numpy as np
 from PIL import Image
-from tqdm import tqdm
-import torch
+import matplotlib.pyplot as plt
+from torchvision import models, transforms
 import torch.nn as nn
-import torch.optim as optim
-from torchvision import transforms, models
-from torch.utils.data import Dataset, DataLoader
+
+transform = transforms.Compose([
+    transforms.Resize((512, 512)),
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
 
 
-# ===== Dataset Class =====
-class SegmentationDataset(Dataset):
-    def __init__(self, image_dir, transform=None):
-        self.image_idr = image_dir
-        self.image_files = sorted([f for f in os.listdir(image_dir) if f.endswith('.png') and "_mask" not in f])
-        self.transform = transform
+def predict(model, image_path, device):
+    image = Image.open(image_path).convert("RGB")
+    input_tensor = transform(image).unsqueeze(0).to(device)
 
-    def __len__(self):
-        return len(self.image_files)
+    with torch.no_grad():
+        output = model(input_tensor)['out']
+        pred = torch.argmax(output.squeeze(), dim=0).cpu().numpy()
 
-    def __getitem__(self, idx):
-        img_path = os.path.join(self.image_dir, self.image_files[idx])
-        mask_path = img_path.replace(".png", "_mask.png")
-        image = Image.open(img_path).convert("RGB")
-        mask = Image.open(mask_path)
-        if self.transform:
-            image = self.transform(image)
-        else:
-            image = transforms.ToTensor()(image)
-
-        mask = np.array(mask, dtype=np.int64)
-
-        return image, torch.tensor(mask, dtype=torch.long)
+    return pred, image
 
 
-# ===== Train Function =====
-def train(model, dataloader, criterion, optimizer, device):
-    model.train()
-    total_loss = 0.0
-    for images, masks in tqdm(dataloader):
-        images = images.to(device)
-        masks = masks.to(device)
-        outputs = model(images)['out']
-        loss = criterion(outputs, masks)
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-
-        total_loss += loss.item()
-        return total_loss / len(dataloader)
-
-
-# ===== Main =====
 def main():
-    train_dir = "/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/train"
-    val_dir = "/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/valid"
-
-    NUM_CLASSES = 2  # 0: background, 1: inclination_terrain
-
-    transform = transforms.Compose([
-        transforms.Resize((512, 512)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
-
-    train_dataset = SegmentationDataset(train_dir, transform=transform)
-    val_dataset = SegmentationDataset(val_dir, transform=transform)
-
-    train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=4)
-
+    image_path = "/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/data/train_images/frame_0104.png"
+    NUM_CLASSES = 2
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    model = models.segmentation.deeplabv3_resnet50(pretrained=True)
+    model = models.segmentation.deeplabv3_resnet50(weights=None, aux_loss=True)
+
     model.classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
-    model = model.to(device)
+    model.aux_classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
 
-    criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    model.load_state_dict(torch.load("deeplabv3_trained.pth", map_location=device))
 
-    for epoch in range(10):
-        loss = train(model, train_loader, criterion, optimizer, device)
-        print(f"Epoch {epoch+1} - Train Loss: {loss:.4f}")
+    model = model.to(device).eval()
 
-    torch.save(model.state_dict(), "deeplabv3_trained.pth")
-    print("✅ モデル保存完了: deeplabv3_trained.pth")
+    pred_mask, original_image = predict(model, image_path, device)
+
+    color_map = np.array([
+        [0, 0, 0],       # background
+        [255, 0, 0]      # inclination_terrain
+    ])
+    color_mask = color_map[pred_mask]
+
+    plt.figure(figsize=(10, 5))
+    plt.subplot(1, 2, 1)
+    plt.title("Original Image")
+    plt.imshow(original_image)
+    plt.subplot(1, 2, 2)
+    plt.title("Predicted Mask")
+    plt.imshow(color_mask)
+    plt.show()
 
 
 if __name__ == "__main__":
