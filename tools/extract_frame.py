@@ -2,9 +2,9 @@ import cv2
 import os
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-input_video_path = "/Users/yudaimatsuura/SRL_Research/for_annotation_video/for_annotation_4.mp4"
+input_video_path = "/home/go2laptop/Downloads/for_annotation_2.mp4"
 # output_image_dir = os.path.abspath(os.path.join(script_dir, '..', 'data', 'train_images'))
-output_image_dir = "/Users/yudaimatsuura/SRL_Research/train_data_img"
+output_image_dir = "/home/go2laptop/yudai_ws/train_data/inclination_terrain_img"
 
 os.makedirs(output_image_dir, exist_ok=True)
 
@@ -18,6 +18,8 @@ frame_count = 0
 display_width = 1024
 
 print("Press SPACE to save frame, Q to quit")
+fps = cap.get(cv2.CAP_PROP_FPS)
+wait_ms = int(1000 / fps)
 
 while True:
     ret, frame = cap.read()
@@ -34,7 +36,7 @@ while True:
 
     cv2.imshow("Video Frame", resized_frame)
 
-    key = cv2.waitKey(1) & 0xFF
+    key = cv2.waitKey(wait_ms) & 0xFF
 
     # if space key pressed
     if key == ord(' '):
