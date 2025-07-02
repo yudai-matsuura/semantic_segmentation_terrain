@@ -33,7 +33,7 @@ def main():
     model.classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
     model.aux_classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
 
-    model.load_state_dict(torch.load("deeplabv3_trained.pth", map_location=device))
+    model.load_state_dict(torch.load("/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/deeplabv3_trained.pth", map_location=device))
 
     model = model.to(device).eval()
 
