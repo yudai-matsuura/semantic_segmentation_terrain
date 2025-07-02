@@ -38,12 +38,13 @@ def main():
     model = model.to(device).eval()
 
     pred_mask, original_image = predict(model, image_path, device)
+    pred_mask_resized = Image.fromarray(pred_mask.astype(np.uint8)).resize(original_image.size, resample=Image.NEAREST)
 
     color_map = np.array([
         [0, 0, 0],       # background
         [255, 0, 0]      # inclination_terrain
     ])
-    color_mask = color_map[pred_mask]
+    color_mask = color_map[pred_mask_resized]
 
     plt.figure(figsize=(10, 5))
     plt.subplot(1, 2, 1)
