@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from torchvision import models, transforms
 import torch.nn as nn
 
-transform = transforms.Compose([
+preprocess = transforms.Compose([
     transforms.Resize((512, 512)),
     transforms.ToTensor(),
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
@@ -14,10 +14,10 @@ transform = transforms.Compose([
 
 def predict(model, image_path, device):
     image = Image.open(image_path).convert("RGB")
-    input_tensor = transform(image).unsqueeze(0).to(device)
+    input_tensor = preprocess(image).unsqueeze(0).to(device)
 
     with torch.no_grad():
-        output = model(input_tensor)['out']
+        output = model(input_tensor)['out']  # [1, NUM_CLASSES, H, W]
         pred = torch.argmax(output.squeeze(), dim=0).cpu().numpy()
 
     return pred, image
