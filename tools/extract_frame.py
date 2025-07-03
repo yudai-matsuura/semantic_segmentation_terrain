@@ -32,7 +32,7 @@ while True:
 
     resize_ratio = display_width / width
     new_height = int(height * resize_ratio)
-    resized_frame = cv2.resize(frame,(display_width, new_height))
+    resized_frame = cv2.resize(frame, (display_width, new_height))
 
     cv2.imshow("Video Frame", resized_frame)
 
