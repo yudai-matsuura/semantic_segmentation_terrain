@@ -1,7 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from cv_ridge import CvBridge
+from cv_bridge import CvBridge
 import cv2
 import numpy as np
 from PIL import Image as PILImage
@@ -11,7 +11,7 @@ import torch.nn as nn
 
 class SegmentationNode(Node):
     def __init__(self):
-        super()._init__('segmentation_node')
+        super().__init__('segmentation_node')
         # Publisher
         self.publisher_ = self.create_publisher(
             Image,
@@ -20,12 +20,12 @@ class SegmentationNode(Node):
         # Subscriber
         self.subscription = self.create_subscription(
             Image,
-            'camera/camera/image_raw'
+            '/camera/camera/image_raw'
             self.image_callback,
             10)
         self.bridge = CvBridge()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.model = models.segmentation.deeplabv3_resnet50(weight=None, aux_loss=True)
+        self.model = models.segmentation.deeplabv3_resnet50(weights=None, aux_loss=True)
         self.model.classifier[4] = nn.Conv2d(256, 2, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(256, 2, kernel_size=1)
 
@@ -41,14 +41,33 @@ class SegmentationNode(Node):
         ])
         self.get_logger().info("Segmentation node initialized")
 
-    def image_callback(self, msg)*
-        # Add image processing here
+    def image_callback(self, msg):
+        try:
+            cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            pil_image = PILImage.fromarray(cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB))
+            input_tensor = self.preprocess(pil_image).unsqueeze(0).to(self.device)
+
+            with torch.no_grad():
+                output = self.model(input_tensor)['out']
+                pred = torch.argmax(output.squeeze(), dim=0).cpu().numpy()
+
+            pred_resized = cv2.resize(pred.astype(np.uint8), (cv_image.shape[1], cv_image.shape[0], interpolation=cv2.INTER_NEAREST))
+            color_mask = np.zeros_like(cv_image)
+            color_mask[pred_resized == 1] = [0, 0, 255]
+
+            mask_msg = self.bridge.cv2_to_imgmsg(color_mask, encoding='bgr8')
+            mask_msg.header = msg.header
+            self.publisher_.publish(mask_msg)
+
+        except Exception as e:
+            self.get_logger().error(f"Falied to process image: {e}")
+
 
 def main(args=None):
     rclpy.init(args=args)
     node = SegmentationNode()
     rclpy.spin(node)
-    node.destory_node()
+    node.destroy_node()
     rclpy.shutdown()
 
 if __name__ == '__main__':
