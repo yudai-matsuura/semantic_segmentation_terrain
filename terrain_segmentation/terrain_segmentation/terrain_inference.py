@@ -30,7 +30,7 @@ class SegmentationNode(Node):
         self.model.classifier[4] = nn.Conv2d(256, 2, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(256, 2, kernel_size=1)
 
-        model_path = '/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/deeplabv3_trained.pth'
+        model_path = '/home/srl-limb-ws4/yudai_ws/deeplabv3_trained.pth'
         self.model.load_state_dict(torch.load(model_path, map_location=self.device))
         self.model = self.model.to(self.device).eval()
 
