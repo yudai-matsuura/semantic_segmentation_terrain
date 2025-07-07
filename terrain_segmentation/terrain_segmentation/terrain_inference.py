@@ -21,16 +21,21 @@ class SegmentationNode(Node):
         # Subscriber
         self.subscription = self.create_subscription(
             Image,
-            '/camera/camera/color/image_raw',
+            '/segmentation/input/image',
             self.image_callback,
             10)
+
         self.bridge = CvBridge()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = models.segmentation.deeplabv3_resnet50(weights=None, aux_loss=True)
-        self.model.classifier[4] = nn.Conv2d(256, 2, kernel_size=1)
-        self.model.aux_classifier[4] = nn.Conv2d(256, 2, kernel_size=1)
+        NUM_CLASSES = 2  # Adjust based on your dataset
+        self.model.classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
+        self.model.aux_classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
 
         model_path = '/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/deeplabv3_trained.pth'
+        if not os.path.exists(model_path):
+            self.get_logger().error(f"Model file notn found: {model_path}")
+            return
         self.model.load_state_dict(torch.load(model_path, map_location=self.device))
         self.model = self.model.to(self.device).eval()
 
