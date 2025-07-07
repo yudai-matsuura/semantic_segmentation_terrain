@@ -9,6 +9,7 @@ import torch
 from torchvision import models, transforms
 import torch.nn as nn
 
+
 class SegmentationNode(Node):
     def __init__(self):
         super().__init__('segmentation_node')
@@ -20,7 +21,7 @@ class SegmentationNode(Node):
         # Subscriber
         self.subscription = self.create_subscription(
             Image,
-            '/camera/camera/image_raw'
+            '/camera/camera/color/image_raw',
             self.image_callback,
             10)
         self.bridge = CvBridge()
@@ -37,7 +38,7 @@ class SegmentationNode(Node):
         self.preprocess = transforms.Compose([
             transforms.Resize((512, 512)),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])              
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         self.get_logger().info("Segmentation node initialized")
 
@@ -51,7 +52,7 @@ class SegmentationNode(Node):
                 output = self.model(input_tensor)['out']
                 pred = torch.argmax(output.squeeze(), dim=0).cpu().numpy()
 
-            pred_resized = cv2.resize(pred.astype(np.uint8), (cv_image.shape[1], cv_image.shape[0], interpolation=cv2.INTER_NEAREST))
+            pred_resized = cv2.resize(pred.astype(np.uint8), (cv_image.shape[1], cv_image.shape[0]), interpolation=cv2.INTER_NEAREST)
             color_mask = np.zeros_like(cv_image)
             color_mask[pred_resized == 1] = [0, 0, 255]
 
@@ -69,6 +70,7 @@ def main(args=None):
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
+
 
 if __name__ == '__main__':
     main()
