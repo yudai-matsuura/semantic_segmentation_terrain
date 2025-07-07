@@ -32,7 +32,7 @@ class SegmentationNode(Node):
         self.model.classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
 
-        model_path = '/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/deeplabv3_trained.pth'
+        model_path = '/home/srl-limb-ws4/yudai_ws/deeplabv3_trained.pth'
         if not os.path.exists(model_path):
             self.get_logger().error(f"Model file notn found: {model_path}")
             return
