@@ -8,6 +8,7 @@ from PIL import Image as PILImage
 import torch
 from torchvision import models, transforms
 import torch.nn as nn
+import os
 
 
 class SegmentationNode(Node):
@@ -48,14 +49,24 @@ class SegmentationNode(Node):
         self.get_logger().info("Segmentation node initialized")
 
     def image_callback(self, msg):
+        # self.get_logger().info(f"Received color with stamp: {msg.header.stamp.sec}.{msg.header.stamp.nanosec:09f}")
         try:
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
             pil_image = PILImage.fromarray(cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB))
             input_tensor = self.preprocess(pil_image).unsqueeze(0).to(self.device)
 
+            start_time = self.get_clock().now()
+
             with torch.no_grad():
                 output = self.model(input_tensor)['out']
                 pred = torch.argmax(output.squeeze(), dim=0).cpu().numpy()
+
+            if self.device.type == 'cuda':
+                torch.cuda.synchronize()
+
+            end_time = self.get_clock().now()
+            duration = end_time - start_time
+            self.get_logger().info(f"Inference time: {duration.nanoseconds / 1e9:.4f} seconds")
 
             pred_resized = cv2.resize(pred.astype(np.uint8), (cv_image.shape[1], cv_image.shape[0]), interpolation=cv2.INTER_NEAREST)
             color_mask = np.zeros_like(cv_image)
