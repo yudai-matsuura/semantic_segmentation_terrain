@@ -20,6 +20,7 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
+            'terrain_inference_node = terrain_segmentation.terrain_inference:main'
         ],
     },
 )
