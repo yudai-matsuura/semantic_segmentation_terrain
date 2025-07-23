@@ -13,7 +13,7 @@ class ImageSaver(Node):
         super().__init__('image_saver')
 
         default_topic = '/throttle/camera/color/image_raw'
-        default_output_dir = '/media/go2laptop/T7/dataset_training/raw_color_images'
+        default_output_dir = '/media/go2laptop/T7/training_dataset/raw_color_images'
 
         self.declare_parameter('topic', default_topic)
         self.declare_parameter('output_dir', default_output_dir)
@@ -34,13 +34,13 @@ class ImageSaver(Node):
         )
 
     def callback(self, msg: Image):
-        # Convert to ROS message
+        # Convert to OpenCV message
         cv_img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
         self.last_frame = cv_img
 
         # Show preview
         cv2.imshow('image_raw (press SPACE to save)', cv_img)
-        key = cv2.waitkey(1) & 0xFF
+        key = cv2.waitKey(1) & 0xFF
 
         # Save image
         if key == 32:
