@@ -15,9 +15,13 @@ class SegmentationNode(Node):
     def __init__(self):
         super().__init__('segmentation_node')
         # Publisher
-        self.publisher_ = self.create_publisher(
+        self.mask_publisher_ = self.create_publisher(
             Image,
             '/segmentation/mask',
+            10)
+        self.overlaid_publisher_ = self.create_publisher(
+            Image,
+            '/segmentation/overlaid_image',
             10)
         # Subscriber
         self.subscription = self.create_subscription(
@@ -81,9 +85,17 @@ class SegmentationNode(Node):
 
             color_mask = color_map[pred_resized]
 
+            # Mask image
             mask_msg = self.bridge.cv2_to_imgmsg(color_mask, encoding='bgr8')
             mask_msg.header = msg.header
-            self.publisher_.publish(mask_msg)
+            self.mask_publisher_.publish(mask_msg)
+            # Overlaid image
+            alpha = 0.6
+            beta = 0.4
+            overlaid_image = cv2.addWeighted(cv_image, alpha, color_mask, beta, 0)
+            overlaid_msg = self.bridge.cv2_to_imgmsg(overlaid_image, encoding='bgr8')
+            overlaid_msg.header = msg.header
+            self.overlaid_publisher_.publish(overlaid_msg)
 
         except Exception as e:
             self.get_logger().error(f"Falied to process image: {e}")
