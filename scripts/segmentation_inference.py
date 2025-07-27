@@ -49,13 +49,24 @@ def main():
     ])
     color_mask = color_map[pred_mask_resized]
 
-    plt.figure(figsize=(10, 5))
-    plt.subplot(1, 2, 1)
+    plt.figure(figsize=(15, 5))
+    # Original
+    plt.subplot(1, 3, 1)
     plt.title("Original Image")
     plt.imshow(original_image)
-    plt.subplot(1, 2, 2)
+    plt.axis('off')
+    # Predicted
+    plt.subplot(1, 3, 2)
     plt.title("Predicted Mask")
     plt.imshow(color_mask)
+    plt.axis('off')
+    # Overlay
+    plt.subplot(1, 3, 3)
+    plt.title("Overlaid Image")
+    plt.imshow(original_image)
+    plt.imshow(color_mask, alpha=0.5)
+    plt.axis('off')
+    
     plt.show()
 
 
