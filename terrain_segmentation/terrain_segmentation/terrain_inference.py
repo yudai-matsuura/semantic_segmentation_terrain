@@ -22,18 +22,18 @@ class SegmentationNode(Node):
         # Subscriber
         self.subscription = self.create_subscription(
             Image,
-            '/segmentation/input/image',
+            '/throttle/camera/color/image_raw',
             self.image_callback,
             10)
 
         self.bridge = CvBridge()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = models.segmentation.deeplabv3_resnet50(weights=None, aux_loss=True)
-        NUM_CLASSES = 2  # Adjust based on your dataset
+        NUM_CLASSES = 5  # Adjust based on your dataset
         self.model.classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
         self.model.aux_classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
 
-        model_path = '/home/srl-limb-ws4/yudai_ws/deeplabv3_trained.pth'
+        model_path = '/home/srl-limb-ws4/yudai_ws/BASEPROD_trained.pth'
         if not os.path.exists(model_path):
             self.get_logger().error(f"Model file notn found: {model_path}")
             return
@@ -69,8 +69,17 @@ class SegmentationNode(Node):
             self.get_logger().info(f"Inference time: {duration.nanoseconds / 1e9:.4f} seconds")
 
             pred_resized = cv2.resize(pred.astype(np.uint8), (cv_image.shape[1], cv_image.shape[0]), interpolation=cv2.INTER_NEAREST)
-            color_mask = np.zeros_like(cv_image)
-            color_mask[pred_resized == 1] = [0, 0, 255]
+            # color_mask = np.zeros_like(cv_image)
+            # color_mask[pred_resized == 1] = [0, 0, 255]
+            color_map = np.array([
+                [0, 0, 0],         # 0: background
+                [0, 0, 255],       # 1: bed rock (赤)
+                [0, 255, 0],       # 2: elevated bed rock (緑)
+                [255, 0, 0],       # 3: soil (青)
+                [0, 255, 255]      # 4: uneven terrain (黄)
+            ], dtype=np.uint8)
+
+            color_mask = color_map[pred_resized]
 
             mask_msg = self.bridge.cv2_to_imgmsg(color_mask, encoding='bgr8')
             mask_msg.header = msg.header

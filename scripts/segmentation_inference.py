@@ -24,7 +24,7 @@ def predict(model, image_path, device):
 
 
 def main():
-    image_path = "/media/srl-limb-ws4/T7/training_dataset/raw_color_images/20230721_194427_741626.png"
+    image_path = "/media/srl-limb-ws4/T7/training_dataset/raw_color_images/20230721_194136_718902.png"
     NUM_CLASSES = 5
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -66,7 +66,7 @@ def main():
     plt.imshow(original_image)
     plt.imshow(color_mask, alpha=0.5)
     plt.axis('off')
-    
+
     plt.show()
 
 
