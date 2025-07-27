@@ -24,8 +24,8 @@ def predict(model, image_path, device):
 
 
 def main():
-    image_path = "/home/go2laptop/yudai_ws/src/semantic_segmentation_terrain/data/train_images/frame_0104.png"
-    NUM_CLASSES = 2
+    image_path = "/media/srl-limb-ws4/T7/training_dataset/raw_color_images/20230721_194427_741626.png"
+    NUM_CLASSES = 5
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = models.segmentation.deeplabv3_resnet50(weights=None, aux_loss=True)
@@ -33,7 +33,7 @@ def main():
     model.classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
     model.aux_classifier[4] = nn.Conv2d(256, NUM_CLASSES, kernel_size=1)
 
-    model.load_state_dict(torch.load("/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/deeplabv3_trained.pth", map_location=device))
+    model.load_state_dict(torch.load("/home/srl-limb-ws4/yudai_ws/BASEPROD_trained.pth", map_location=device))
 
     model = model.to(device).eval()
 
@@ -42,7 +42,10 @@ def main():
 
     color_map = np.array([
         [0, 0, 0],       # background
-        [255, 0, 0]      # inclination_terrain
+        [255, 0, 0],     # bed rock
+        [0, 255, 0],     # elevated bed rock
+        [0, 0, 255],     # soil
+        [255, 255, 0]    # uneven terrain
     ])
     color_mask = color_map[pred_mask_resized]
 
