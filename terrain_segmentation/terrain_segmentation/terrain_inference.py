@@ -29,6 +29,12 @@ class SegmentationNode(Node):
             '/throttle/camera/color/image_raw',
             self.image_callback,
             10)
+        # Parameters
+        self.declare_parameter('target_width', 848)  # Default value
+        self.declare_parameter('target_height', 480)  # Default value
+        self.target_width = self.get_parameter('target_width').value
+        self.target_height = self.get_parameter('target_height').value
+        self.get_logger().info(f"Target mask resolution set to : {self.target_width}x{self.target_height}")
 
         self.bridge = CvBridge()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -72,7 +78,8 @@ class SegmentationNode(Node):
             duration = end_time - start_time
             self.get_logger().info(f"Inference time: {duration.nanoseconds / 1e9:.4f} seconds")
 
-            pred_resized = cv2.resize(pred.astype(np.uint8), (cv_image.shape[1], cv_image.shape[0]), interpolation=cv2.INTER_NEAREST)
+            target_size = (self.target_width, self.target_height)
+            pred_resized = cv2.resize(pred.astype(np.uint8), target_size, interpolation=cv2.INTER_NEAREST)
             # color_mask = np.zeros_like(cv_image)
             # color_mask[pred_resized == 1] = [0, 0, 255]
             color_map = np.array([
