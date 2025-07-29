@@ -79,7 +79,7 @@ class SegmentationNode(Node):
             self.get_logger().info(f"Inference time: {duration.nanoseconds / 1e9:.4f} seconds")
 
             target_size = (self.target_width, self.target_height)
-            pred_resized = cv2.resize(pred.astype(np.uint8), target_size, interpolation=cv2.INTER_NEAREST)
+            pred_resized_for_pointcloud = cv2.resize(pred.astype(np.uint8), target_size, interpolation=cv2.INTER_NEAREST)
             # color_mask = np.zeros_like(cv_image)
             # color_mask[pred_resized == 1] = [0, 0, 255]
             color_map = np.array([
@@ -90,16 +90,22 @@ class SegmentationNode(Node):
                 [0, 255, 255]      # 4: uneven terrain (黄)
             ], dtype=np.uint8)
 
-            color_mask = color_map[pred_resized]
+            color_mask_for_pointcloud = color_map[pred_resized_for_pointcloud]
 
             # Mask image
-            mask_msg = self.bridge.cv2_to_imgmsg(color_mask, encoding='bgr8')
+            mask_msg = self.bridge.cv2_to_imgmsg(color_mask_for_pointcloud, encoding='bgr8')
             mask_msg.header = msg.header
             self.mask_publisher_.publish(mask_msg)
+
+            # Generate mask for visualization
+            color_image_size = (cv_image.shape[1], cv_image.shape[0])
+            pred_resized_for_viz = cv2.resize(pred, color_image_size, interpolation=cv2.INTER_NEAREST)
+            color_mask_for_viz = color_map[pred_resized_for_viz]
+
             # Overlaid image
             alpha = 0.6
             beta = 0.4
-            overlaid_image = cv2.addWeighted(cv_image, alpha, color_mask, beta, 0)
+            overlaid_image = cv2.addWeighted(cv_image, alpha, color_mask_for_viz, beta, 0)
             overlaid_msg = self.bridge.cv2_to_imgmsg(overlaid_image, encoding='bgr8')
             overlaid_msg.header = msg.header
             self.overlaid_publisher_.publish(overlaid_msg)
