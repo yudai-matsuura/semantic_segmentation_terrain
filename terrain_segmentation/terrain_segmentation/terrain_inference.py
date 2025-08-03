@@ -30,8 +30,8 @@ class SegmentationNode(Node):
             self.image_callback,
             10)
         # Parameters
-        self.declare_parameter('target_width', 848)  # Default value
-        self.declare_parameter('target_height', 480)  # Default value
+        self.declare_parameter('target_width', 320)  # Default value
+        self.declare_parameter('target_height', 240)  # Default value
         self.target_width = self.get_parameter('target_width').value
         self.target_height = self.get_parameter('target_height').value
         self.get_logger().info(f"Target mask resolution set to : {self.target_width}x{self.target_height}")
