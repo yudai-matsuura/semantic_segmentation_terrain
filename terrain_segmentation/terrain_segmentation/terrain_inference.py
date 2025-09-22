@@ -65,7 +65,7 @@ class SegmentationNode(Node):
             pil_image = PILImage.fromarray(cv2.cvtColor(cv_image, cv2.COLOR_BGR2RGB))
             input_tensor = self.preprocess(pil_image).unsqueeze(0).to(self.device)
 
-            start_time = self.get_clock().now()
+            # start_time = self.get_clock().now()
 
             with torch.no_grad():
                 output = self.model(input_tensor)['out']
@@ -74,9 +74,9 @@ class SegmentationNode(Node):
             if self.device.type == 'cuda':
                 torch.cuda.synchronize()
 
-            end_time = self.get_clock().now()
-            duration = end_time - start_time
-            self.get_logger().info(f"Inference time: {duration.nanoseconds / 1e9:.4f} seconds")
+            # end_time = self.get_clock().now()
+            # duration = end_time - start_time
+            # self.get_logger().info(f"Inference time: {duration.nanoseconds / 1e9:.4f} seconds")
 
             target_size = (self.target_width, self.target_height)
             pred_resized_for_pointcloud = cv2.resize(pred.astype(np.uint8), target_size, interpolation=cv2.INTER_NEAREST)
