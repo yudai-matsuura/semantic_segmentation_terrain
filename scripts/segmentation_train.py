@@ -68,10 +68,10 @@ def train(model, dataloader, criterion, optimizer, device):
 
 # ===== Main =====
 def main():
-    train_dir = "/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/train"
-    val_dir = "/home/go2laptop/yudai_ws/Inclination Terrain Segmentation.v1i.png-mask-semantic/valid"
+    train_dir = "/home/srl-limb-ws4/yudai_ws/training/BASEPROD_segmentation/train"
+    val_dir = "/home/srl-limb-ws4/yudai_ws/training/BASEPROD_segmentation/valid"
 
-    NUM_CLASSES = 2  # 0: background, 1: inclination_terrain
+    NUM_CLASSES = 5  # 0: background, 1: Bedrock 2: ElevatedBedrock 3: Soil 4: UnevenTerrain
 
     transform = transforms.Compose([
         transforms.Resize((512, 512)),
@@ -95,12 +95,12 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=1e-4)
 
-    for epoch in range(10):
+    for epoch in range(15):
         loss = train(model, train_loader, criterion, optimizer, device)
         print(f"Epoch {epoch+1} - Train Loss: {loss:.4f}")
 
-    torch.save(model.state_dict(), "deeplabv3_trained.pth")
-    print("✅ モデル保存完了: deeplabv3_trained.pth")
+    torch.save(model.state_dict(), "BASEPROD_trained.pth")
+    print("✅ モデル保存完了: BASEPROD_trained.pth")
 
 
 if __name__ == "__main__":
